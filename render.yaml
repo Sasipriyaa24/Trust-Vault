@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: trustvault
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_JWT_SECRET
+        generateValue: true
+      - key: AUDIT_HMAC_SECRET
+        generateValue: true
