@@ -1,6 +1,7 @@
 // API Client Service with automatic token injection and error handling
 
-const API_BASE = '/api';
+const rawBase = import.meta.env.VITE_API_URL || '';
+const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
 
 /**
  * Helper to get active JWT from localStorage

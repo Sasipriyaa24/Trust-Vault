@@ -105,6 +105,33 @@ export default function AuditActivityView() {
     }
   }
 
+  async function handleRestoreTampering() {
+    setTampering(true);
+    try {
+      await apiRequest('/admin/audit-logs/restore-tampering', {
+        method: 'POST',
+        body: { logId: 1 }
+      });
+      await loadAuditLogs();
+      await verifyChain();
+    } catch (err) {
+      alert(`Restore error: ${err.message}`);
+    } finally {
+      setTampering(false);
+    }
+  }
+
+  function formatLogTimestamp(log) {
+    const raw = log?.timestamp || log?.created_at;
+    if (!raw) return '—';
+    try {
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? String(raw) : d.toISOString().replace('T', ' ').substring(0, 19);
+    } catch {
+      return String(raw);
+    }
+  }
+
   function handleCopy(text, id) {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -145,73 +172,101 @@ export default function AuditActivityView() {
       </div>
 
       {/* Cryptographic Hash Chain Verifier Banner */}
-      <div
-        className="card"
-        style={{
-          borderLeft: verificationResult?.isValid ? '4px solid var(--emerald-success)' : '4px solid var(--rose-danger)',
-          marginBottom: '20px',
-          background: verificationResult?.isValid ? 'var(--emerald-bg)' : 'var(--rose-bg)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '50%',
-                background: 'var(--bg-surface)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: verificationResult?.isValid ? 'var(--emerald-success)' : 'var(--rose-danger)',
-                border: '1px solid var(--border-subtle)'
-              }}
-            >
-              {verificationResult?.isValid ? <ShieldCheck size={24} /> : <AlertOctagon size={24} />}
-            </div>
+      {(() => {
+        const isVerified = verificationResult?.isValid === true;
+        const isCompromised = verificationResult && verificationResult.isValid === false;
+        const isChecking = verifying || !verificationResult;
 
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--navy-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>HMAC-SHA256 Cryptographic Hash Chain:</span>
-                <span className={`badge ${verificationResult?.isValid ? 'badge-emerald' : 'badge-rose'}`}>
-                  {verifying ? 'VERIFYING...' : verificationResult?.isValid ? 'INTEGRITY VERIFIED' : 'COMPROMISED / TAMPER DETECTED'}
-                </span>
+        const borderColor = isChecking ? '4px solid var(--blue-primary)' : isVerified ? '4px solid var(--emerald-success)' : '4px solid var(--rose-danger)';
+        const bg = isChecking ? 'var(--blue-subtle)' : isVerified ? 'var(--emerald-bg)' : 'var(--rose-bg)';
+        const iconColor = isChecking ? 'var(--blue-primary)' : isVerified ? 'var(--emerald-success)' : 'var(--rose-danger)';
+
+        return (
+          <div
+            className="card"
+            style={{
+              borderLeft: borderColor,
+              marginBottom: '20px',
+              background: bg
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    background: 'var(--bg-surface)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: iconColor,
+                    border: '1px solid var(--border-subtle)'
+                  }}
+                >
+                  {isChecking ? <RefreshCw size={22} className="animate-spin" /> : isVerified ? <ShieldCheck size={24} /> : <AlertOctagon size={24} />}
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--navy-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>HMAC-SHA256 Cryptographic Hash Chain:</span>
+                    <span className={`badge ${isChecking ? 'badge-blue' : isVerified ? 'badge-emerald' : 'badge-rose'}`}>
+                      {isChecking ? 'VERIFYING...' : isVerified ? 'INTEGRITY VERIFIED' : 'COMPROMISED / TAMPER DETECTED'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    {isChecking
+                      ? 'Performing cryptographic HMAC-SHA256 hash chain verification across all ledger records...'
+                      : isVerified
+                      ? `All ${verificationResult.checkedCount || logs.length} audit records mathematically verified against cryptographic chain signatures.`
+                      : `Chain verification failed! Log ID ${verificationResult?.compromisedAtId || 'unknown'} hash signature does not match.`}
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {verificationResult?.isValid
-                  ? `All ${verificationResult.checkedCount || logs.length} audit records mathematically verified against cryptographic chain signatures.`
-                  : `Chain verification failed! Log ID ${verificationResult?.compromisedAtId || 'unknown'} hash signature does not match.`}
+
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  id="btn-verify-audit-chain"
+                  className="btn btn-secondary"
+                  onClick={verifyChain}
+                  disabled={verifying}
+                  style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                >
+                  <RefreshCw size={13} className={verifying ? 'animate-spin' : ''} />
+                  Re-verify Chain
+                </button>
+
+                {isCompromised ? (
+                  <button
+                    id="btn-restore-ledger"
+                    className="btn btn-primary"
+                    onClick={handleRestoreTampering}
+                    disabled={tampering}
+                    style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                    title="Restore ledger to authentic pre-attack state"
+                  >
+                    <ShieldCheck size={13} />
+                    {tampering ? 'Restoring...' : 'Restore Ledger Integrity'}
+                  </button>
+                ) : (
+                  <button
+                    id="btn-simulate-tamper-attack"
+                    className="btn btn-danger"
+                    onClick={handleSimulateTampering}
+                    disabled={tampering}
+                    style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                    title="Test whether cryptographic verification catches direct database tampering"
+                  >
+                    <AlertOctagon size={13} />
+                    {tampering ? 'Tampering...' : 'Simulate Tamper Attack'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
-
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              id="btn-verify-audit-chain"
-              className="btn btn-secondary"
-              onClick={verifyChain}
-              disabled={verifying}
-              style={{ fontSize: '0.78rem', padding: '6px 12px' }}
-            >
-              <RefreshCw size={13} className={verifying ? 'animate-spin' : ''} />
-              Re-verify Chain
-            </button>
-
-            <button
-              id="btn-simulate-tamper-attack"
-              className="btn btn-danger"
-              onClick={handleSimulateTampering}
-              disabled={tampering}
-              style={{ fontSize: '0.78rem', padding: '6px 12px' }}
-              title="Test whether cryptographic verification catches direct database tampering"
-            >
-              <AlertOctagon size={13} />
-              {tampering ? 'Tampering...' : 'Simulate Tamper Attack'}
-            </button>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Filter Toolbar */}
       <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
@@ -334,7 +389,7 @@ export default function AuditActivityView() {
                   <tr key={log.id} style={{ background: isDenied ? 'rgba(254, 242, 242, 0.4)' : undefined }}>
                     {/* Timestamp */}
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {new Date(log.created_at).toISOString().replace('T', ' ').substring(0, 19)}
+                      {formatLogTimestamp(log)}
                     </td>
 
                     {/* Outcome Badge */}
@@ -456,7 +511,7 @@ export default function AuditActivityView() {
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>UTC Timestamp:</span>{' '}
-                  <span style={{ fontFamily: 'var(--font-mono)' }}>{selectedLog.created_at}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{formatLogTimestamp(selectedLog)}</span>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Client IP:</span>{' '}
@@ -489,8 +544,8 @@ export default function AuditActivityView() {
               <div>
                 <div style={{ fontWeight: 600, color: 'var(--navy-dark)', marginBottom: '4px' }}>Cryptographic Proofs:</div>
                 <div style={{ background: 'var(--bg-subtle)', padding: '10px', borderRadius: 'var(--radius-md)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
-                  <div><strong>Prev Hash:</strong> {selectedLog.prev_hash || 'GENESIS'}</div>
-                  <div style={{ marginTop: '4px' }}><strong>Record Signature:</strong> {selectedLog.entry_hash || 'HMAC-SHA256'}</div>
+                  <div><strong>Prev Hash:</strong> {selectedLog.previous_hash || selectedLog.prev_hash || 'GENESIS'}</div>
+                  <div style={{ marginTop: '4px' }}><strong>Record Signature:</strong> {selectedLog.current_hash || selectedLog.entry_hash || 'HMAC-SHA256'}</div>
                 </div>
               </div>
             </div>

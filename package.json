@@ -1,0 +1,26 @@
+{
+  "name": "trustvault",
+  "version": "1.0.0",
+  "description": "TrustVault: Enterprise Secure Document-Sharing Platform (Snovasys Fresher Hiring Challenge 2026)",
+  "scripts": {
+    "dev": "node start-dev.js",
+    "start": "node server/src/index.js",
+    "start:dev": "node start-dev.js",
+    "build": "npm --prefix server install && npm --prefix client install && npm run build --prefix client",
+    "test": "npm test --prefix server",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client",
+    "migrate": "npm run migrate --prefix server",
+    "seed": "npm run seed --prefix server"
+  },
+  "keywords": [
+    "security",
+    "zero-trust",
+    "document-sharing",
+    "supabase",
+    "audit-chain"
+  ],
+  "author": "TrustVault Engineering Team",
+  "license": "ISC"
+}

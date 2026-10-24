@@ -24,7 +24,7 @@ export default function UploadView() {
 
   const fileInputRef = useRef(null);
 
-  const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg'];
+  const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.docx', '.xlsx', '.txt'];
 
   useEffect(() => {
     loadCategories();
@@ -121,7 +121,6 @@ export default function UploadView() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('document', file);
     formData.append('title', title.trim());
     formData.append('description', description.trim());
     if (categoryId) formData.append('category_id', categoryId);
@@ -343,7 +342,7 @@ export default function UploadView() {
                 type="file"
                 style={{ display: 'none' }}
                 onChange={(e) => handleFileSelection(e.target.files[0])}
-                accept=".pdf,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,.txt"
               />
 
               <div
@@ -381,7 +380,7 @@ export default function UploadView() {
                     Click to select or drag and drop document
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Supported formats: PDF, PNG, JPG, JPEG (Max 10MB)
+                    Supported formats: PDF, PNG, JPG, JPEG, DOCX, XLSX, TXT (Max 10MB)
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '8px' }}>
                     Strict magic-byte signature check validated server-side. Executable & SVG files blocked.
