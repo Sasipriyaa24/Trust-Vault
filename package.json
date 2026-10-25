@@ -6,11 +6,11 @@
     "dev": "node start-dev.js",
     "start": "node server/src/index.js",
     "start:dev": "node start-dev.js",
-    "build": "npm --prefix server install && npm --prefix client install && npm run build --prefix client",
+    "build": "npm --prefix server install && npm --prefix client install --include=dev && npm run build --prefix client",
     "test": "npm test --prefix server",
     "server": "npm run dev --prefix server",
     "client": "npm run dev --prefix client",
-    "build:client": "npm run build --prefix client",
+    "build:client": "npm --prefix client install --include=dev && npm run build --prefix client",
     "migrate": "npm run migrate --prefix server",
     "seed": "npm run seed --prefix server"
   },

@@ -167,6 +167,24 @@ To maintain a zero-trust posture throughout AI pair-programming, the following a
 
 ---
 
+### Entry 8: Render Production Deployment Build Failure Resolution (`vite: not found`)
+- **Date**: 2026-10-25
+- **Actual Prompt / Faithful Summary**:
+  > *"Render deployment failed during build step: `sh: 1: vite: not found; ==> Build failed`. Diagnose and resolve the build failure."*
+- **What the Tool Produced**:
+  - Root cause diagnosis: In `render.yaml`, `NODE_ENV=production` is set as an environment variable. When `npm install` executes under `NODE_ENV=production`, npm ignores all packages listed under `devDependencies`. Since `vite` and `@vitejs/plugin-react` were previously placed in `client/package.json#devDependencies`, npm omitted them during the Render build installation, causing `npm run build --prefix client` to fail with `vite: not found`.
+- **Specific Flaw, Omission, or Security Assumption Checked**:
+  - *Production Build Dependency Categorization*: In modern frontend tooling (Vite/Rollup), bundlers are build-time compilation requirements. When hosting platforms set `NODE_ENV=production` prior to running the build command, bundlers in `devDependencies` are pruned unless explicitly included.
+- **What Was Changed & How Verified**:
+  - In `client/package.json`: Promoted `vite` (`^8.3.4`) and `@vitejs/plugin-react` (`^6.1.2`) to `dependencies` so they are installed even when npm runs with production flags.
+  - In root `package.json`: Updated build scripts to explicitly supply `--include=dev` (`"npm --prefix client install --include=dev && npm run build --prefix client"`).
+  - Regenerated `client/package-lock.json` and executed local build (`npm run build`). Verified full compilation and confirmed that `dist/index.html` and bundle chunks were generated cleanly.
+  - Re-ran test suite (`npm test`) to verify all 104 tests continue to pass with 0 regressions.
+- **Commit Hash / Link**:
+  - [`b65f7c3`](https://github.com/Sasipriyaa24/Trust-Vault/commit/b65f7c3) — *"Fix Render production build failure by moving Vite to dependencies"*
+
+---
+
 ## 3. Threat-to-Automated-Test Verification Checklist
 
 Every entry below has been cross-referenced and validated against the active codebase:
