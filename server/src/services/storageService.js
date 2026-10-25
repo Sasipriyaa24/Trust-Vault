@@ -7,6 +7,7 @@ class StorageService {
   constructor() {
     this.bucketName = config.storageBucket;
     this.isLiveSupabase = (
+      config.nodeEnv !== 'test' &&
       config.supabaseUrl &&
       config.supabaseUrl.startsWith('https://') &&
       !config.supabaseUrl.includes('demo-trustvault') &&
