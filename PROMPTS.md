@@ -181,7 +181,7 @@ To maintain a zero-trust posture throughout AI pair-programming, the following a
   - Regenerated `client/package-lock.json` and executed local build (`npm run build`). Verified full compilation and confirmed that `dist/index.html` and bundle chunks were generated cleanly.
   - Re-ran test suite (`npm test`) to verify all 104 tests continue to pass with 0 regressions.
 - **Commit Hash / Link**:
-  - [`b65f7c3`](https://github.com/Sasipriyaa24/Trust-Vault/commit/b65f7c3) — *"Fix Render production build failure by moving Vite to dependencies"*
+  - [`358089b`](https://github.com/Sasipriyaa24/Trust-Vault/commit/358089b) — *"Fix Render production build failure by moving Vite to dependencies"*
 
 ---
 
