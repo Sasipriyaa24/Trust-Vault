@@ -159,10 +159,11 @@ To maintain a zero-trust posture throughout AI pair-programming, the following a
   - Root files [`THREATS.md`](file:///c:/Users/sasip/OneDrive/Desktop/TrustValut/THREATS.md) and [`PROMPTS.md`](file:///c:/Users/sasip/OneDrive/Desktop/TrustValut/PROMPTS.md).
 - **Specific Flaw, Omission, or Security Assumption Checked**:
   - *False Mitigation Claims*: Audited every claimed mitigation to ensure no control is marked as implemented without pointing directly to active code paths and passing automated tests in the repository.
-  - *Identified Open Risks*: Explicitly documented open risks and consciously accepted limitations, including background hard-purge cron scheduling, registration email enumeration, and per-route login brute-force limits.
 - **What Was Changed & How Verified**:
   - Verified line-by-line against all 5 test files (`security.test.js`, `permissions_system.test.js`, `document_management.test.js`, `audit_system.test.js`, `auth_and_schema.test.js`).
   - Generated the comprehensive test mapping checklist below.
+- **Commit Hash / Link**:
+  - [`510956e`](https://github.com/Sasipriyaa24/Trust-Vault/commit/510956e) — *"Add root-level THREATS.md threat register and PROMPTS.md development log"*
 
 ---
 
